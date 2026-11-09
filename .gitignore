@@ -1,0 +1,17 @@
+# Office temporary files
+~$*.docx
+~$*.pptx
+~$*.xlsx
+*.tmp
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace

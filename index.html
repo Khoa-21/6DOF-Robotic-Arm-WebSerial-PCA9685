@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="blue">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Điều Khiển Cánh Tay Robot</title>
+  <style>
+    /* ===== CÁC BỘ MÀU NỀN TÙY CHỌN (THEMES) ===== */
+    :root, [data-theme="blue"] {
+      --bg-body: #16263d;
+      --bg-panel: #1e3352;
+      --bg-panel-inner: #15253d;
+      --border-panel: rgba(255, 255, 255, 0.12);
+      --bg-track: #1b2f4c;
+      --text-main: #f8fafc;
+      --text-sub: #93c5fd;
+      --accent: #38bdf8;
+      --connector: rgba(255, 255, 255, 0.35);
+    }
+
+    [data-theme="navy"] {
+      --bg-body: #0c121e;
+      --bg-panel: #141b2d;
+      --bg-panel-inner: #0f1624;
+      --border-panel: rgba(255, 255, 255, 0.08);
+      --bg-track: #1d273a;
+      --text-main: #f1f5f9;
+      --text-sub: #94a3b8;
+      --accent: #38bdf8;
+      --connector: #2a374f;
+    }
+
+    [data-theme="charcoal"] {
+      --bg-body: #181a20;
+      --bg-panel: #22252e;
+      --bg-panel-inner: #1a1c24;
+      --border-panel: rgba(255, 255, 255, 0.08);
+      --bg-track: #2c303c;
+      --text-main: #f3f4f6;
+      --text-sub: #9ca3af;
+      --accent: #60a5fa;
+      --connector: #383e4e;
+    }
+
+    [data-theme="black"] {
+      --bg-body: #09090b;
+      --bg-panel: #141418;
+      --bg-panel-inner: #0c0c0e;
+      --border-panel: rgba(255, 255, 255, 0.08);
+      --bg-track: #222228;
+      --text-main: #ffffff;
+      --text-sub: #a1a1aa;
+      --accent: #38bdf8;
+      --connector: #282832;
+    }
+
+    [data-theme="forest"] {
+      --bg-body: #0b1713;
+      --bg-panel: #13241e;
+      --bg-panel-inner: #0d1a15;
+      --border-panel: rgba(255, 255, 255, 0.08);
+      --bg-track: #1d332b;
+      --text-main: #f0fdf4;
+      --text-sub: #86efac;
+      --accent: #34d399;
+      --connector: #264439;
+    }
+
+    [data-theme="coffee"] {
+      --bg-body: #171311;
+      --bg-panel: #231c19;
+      --bg-panel-inner: #191412;
+      --border-panel: rgba(255, 255, 255, 0.08);
+      --bg-track: #332824;
+      --text-main: #fef3c7;
+      --text-sub: #fbbf24;
+      --accent: #f59e0b;
+      --connector: #42342e;
+    }
+
+    [data-theme="light"] {
+      --bg-body: #e2e8f0;
+      --bg-panel: #ffffff;
+      --bg-panel-inner: #f1f5f9;
+      --border-panel: rgba(0, 0, 0, 0.08);
+      --bg-track: #222226;
+      --text-main: #0f172a;
+      --text-sub: #64748b;
+      --accent: #2563eb;
+      --connector: #cbd5e1;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px 12px;
+    }
+
+    /* ===== KHUNG CHÍNH CĂN GIỮA MÀN HÌNH (CÂN BẰNG TUYỆT ĐỐI) ===== */
+    .app-container {
+      width: 100%;
+      max-width: 940px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      margin: 0 auto;
+    }
+
+    /* ===== THANH TIÊU ĐỀ & KẾT NỐI ===== */
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 8px 8px 8px;
+      border-bottom: 1px solid var(--border-panel);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      transition: all 0.3s;
+    }
+
+    .status-badge.connected {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+      border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .theme-select, .baud-select {
+      background: var(--bg-panel-inner);
+      color: var(--text-main);
+      border: 1px solid var(--border-panel);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .btn-connect {
+      background: #059669;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-connect:hover {
+      background: #047857;
+    }
+
+    .btn-connect:active {
+      transform: scale(0.96);
+    }
+
+    .btn-connect.connected {
+      background: #dc2626;
+    }
+
+    /* ===== BỐ CỤC 2 CỘT ĐỐI XỨNG CÂN BẰNG ===== */
+    .main-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 330px 1fr;
+      gap: 16px;
+      margin: 8px 0;
+      min-height: 0;
+    }
+
+    /* ===== CỘT TRÁI: BẢNG LẬP TRÌNH & BƯỚC ===== */
+    .left-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-panel);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .panel-heading {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Nhóm nút Lưu bước, Chạy, Xóa */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .btn-action {
+      border: none;
+      border-radius: 8px;
+      padding: 9px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+
+    .btn-action:active {
+      transform: scale(0.96);
+    }
+
+    .btn-save {
+      background: #2563eb;
+      color: #ffffff;
+      grid-column: span 2;
+    }
+
+    .btn-save:hover { background: #1d4ed8; }
+
+    .btn-run {
+      background: #16a34a;
+      color: #ffffff;
+    }
+
+    .btn-run:hover { background: #15803d; }
+    .btn-run.running {
+      background: #ea580c;
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.85; }
+      to { opacity: 1; }
+    }
+
+    .btn-reset-steps {
+      background: var(--bg-track);
+      color: var(--text-main);
+    }
+
+    .btn-reset-steps:hover { opacity: 0.9; }
+
+    .btn-home {
+      background: #475569;
+      color: #ffffff;
+      grid-column: span 2;
+    }
+
+    .btn-home:hover { background: #334155; }
+
+    /* Chế độ chạy: Lần Lượt / Đồng Thời */
+    .step-mode-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-panel-inner);
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--text-main);
+      border: 1px solid var(--border-panel);
+    }
+
+    .step-mode-toggle {
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-step-mode {
+      border: 1px solid var(--border-panel);
+      background: var(--bg-panel);
+      color: var(--text-sub);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-step-mode:hover {
+      border-color: var(--accent);
+    }
+
+    .btn-step-mode.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+
+    /* Cài đặt thời gian nghỉ (Delay) */
+    .delay-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-panel-inner);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--text-main);
+      border: 1px solid var(--border-panel);
+    }
+
+    .delay-input {
+      width: 60px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-panel);
+      color: var(--accent);
+      border-radius: 4px;
+      padding: 2px 6px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 12px;
+      outline: none;
+    }
+
+    /* Danh sách các bước đã lưu */
+    .steps-container {
+      flex: 1;
+      background: var(--bg-panel-inner);
+      border: 1px solid var(--border-panel);
+      border-radius: 8px;
+      padding: 6px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 0;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-panel);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .step-item:hover {
+      filter: brightness(1.15);
+    }
+
+    .step-item.active {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.12);
+      font-weight: 700;
+    }
+
+    .step-badge {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .step-angles {
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--text-sub);
+    }
+
+    .step-del {
+      color: #ef4444;
+      cursor: pointer;
+      padding: 0 4px;
+      font-size: 12px;
+    }
+
+    .empty-steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-sub);
+      font-size: 11px;
+      text-align: center;
+      padding: 10px;
+      line-height: 1.5;
+    }
+
+    /* ===== CỘT PHẢI: KHUNG ĐIỀU KHIỂN KHỚP (ĐẸP, CÂN XỨNG) ===== */
+    .right-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-panel);
+      border-radius: 16px;
+      padding: 12px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      gap: 2px;
+      min-height: 0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Một hàng thanh trượt */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      height: 38px;
+      width: 100%;
+    }
+
+    /* Đường kẻ nối từ tên sang thanh trượt (như ảnh) */
+    .slider-connector {
+      display: flex;
+      align-items: center;
+      width: 135px;
+      flex-shrink: 0;
+    }
+
+    .joint-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      width: 105px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .joint-name:hover {
+      color: var(--accent);
+    }
+
+    .connector-line {
+      flex: 1;
+      height: 2px;
+      background: var(--connector);
+      margin-right: 6px;
+    }
+
+    /* Thanh trượt con nhộng màu đen bo tròn ngắn gọn */
+    .slider-track-box {
+      flex: 1;
+      max-width: 320px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: #222226;
+      border-radius: 20px;
+      padding: 0 4px;
+      height: 34px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    /* Style thanh range */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      outline: none;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    /* Cục tròn trắng điều khiển (chuẩn theo ảnh mẫu) */
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    input[type="range"]:active::-webkit-slider-thumb {
+      transform: scale(1.15);
+      background: #f8fafc;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      cursor: pointer;
+    }
+
+    /* Hộp số góc con nhộng bên phải (090, 100) */
+    .val-pill {
+      background: #222226;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      font-size: 15px;
+      font-weight: 700;
+      height: 34px;
+      min-width: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      margin-left: 10px;
+      flex-shrink: 0;
+      letter-spacing: 0.5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    /* Nút 90 độ tiện lợi bên cạnh */
+    .btn-90 {
+      background: transparent;
+      border: 1px solid var(--border-panel);
+      color: var(--text-sub);
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 6px;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .btn-90:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+    }
+
+    /* Hàng tốc độ ở dưới cùng: 3 nút CHẬM - VỪA - NHANH */
+    .speed-row .slider-connector {
+      width: 120px;
+      justify-content: flex-end;
+    }
+
+    .speedo-icon {
+      margin-right: 6px;
+      display: flex;
+      align-items: center;
+    }
+
+    .speedo-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-main);
+    }
+
+    .speed-btn-group {
+      flex: 1;
+      max-width: 388px;
+      display: flex;
+      gap: 8px;
+      height: 36px;
+    }
+
+    .btn-speed-mode {
+      flex: 1;
+      border: 1px solid var(--border-panel);
+      background: var(--bg-panel-inner);
+      color: var(--text-sub);
+      border-radius: 18px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-speed-mode:hover {
+      filter: brightness(1.2);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .btn-speed-mode.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
+    }
+
+    /* ===== THANH DƯỚI CÙNG ===== */
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px 2px 8px;
+      border-top: 1px solid var(--border-panel);
+      flex-shrink: 0;
+    }
+
+    .status-text {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .btn-stop-all {
+      background: #dc2626;
+      color: #ffffff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-stop-all:hover {
+      background: #b91c1c;
+    }
+
+    /* TOAST THÔNG BÁO */
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--bg-panel);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      z-index: 2000;
+      border: 1px solid var(--border-panel);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* BANNER CẢNH BÁO MỞ TRỰC TIẾP FILE */
+    .file-warning {
+      background: #b45309;
+      color: #ffffff;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      display: none;
+    }
+
+    @media (max-width: 820px) {
+      .main-body {
+        grid-template-columns: 280px 1fr;
+        gap: 10px;
+      }
+      .slider-connector {
+        width: 100px;
+      }
+      .joint-name {
+        width: 70px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <div class="file-warning" id="fileWarning">
+      ⚠️ <b>LƯU Ý:</b> Trình duyệt chặn kết nối USB khi mở trực tiếp file://. Hãy nhấp đúp file <b>Chay_App.bat</b> trong thư mục <code>c:\app_dieu_khien</code> để kết nối được Arduino!
+    </div>
+
+    <!-- TIÊU ĐỀ & KẾT NỐI -->
+    <div class="header-bar">
+      <div class="brand-title">
+        <span>🦾 Điều Khiển Cánh Tay Robot</span>
+        <span class="status-badge" id="statusBadge">
+          <span class="status-dot"></span>
+          <span id="statusText">Chưa cắm USB</span>
+        </span>
+      </div>
+
+      <div class="top-controls">
+        <!-- BỘ CHỌN MÀU NỀN TIỆN LỢI -->
+        <select class="theme-select" id="themeSelect" onchange="changeTheme(this.value)" title="Chọn màu nền yêu thích">
+          <option value="blue" selected>🌊 Xanh Dương Dịu</option>
+          <option value="navy">🌌 Xanh Navy Đậm</option>
+          <option value="charcoal">🕶 Xám Khói</option>
+          <option value="black">🖤 Đen Carbon</option>
+          <option value="forest">🌲 Xanh Rêu</option>
+          <option value="coffee">☕ Nâu Trầm</option>
+          <option value="light">☀️ Sáng Tinh Tế</option>
+        </select>
+
+        <select class="baud-select" id="baudRate">
+          <option value="9600" selected>9600 Baud</option>
+          <option value="115200">115200 Baud</option>
+        </select>
+
+        <button class="btn-connect" id="btnConnect" onclick="toggleConnect()">
+          <span>🔌 Cắm Cáp</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- NỘI DUNG 2 CỘT CÂN ĐỐI NẰM CHÍNH GIỮA MÀN HÌNH -->
+    <div class="main-body">
+
+      <!-- CỘT TRÁI: ĐIỀU KHIỂN BƯỚC & TỰ ĐỘNG -->
+      <div class="left-panel">
+        <div class="panel-heading">
+          <span>Tự Động Hóa</span>
+          <span id="stepCountText" style="color: var(--accent);">0 bước</span>
+        </div>
+
+        <!-- CÁC NÚT THAO TÁC BƯỚC -->
+        <div class="action-grid">
+          <button class="btn-action btn-save" onclick="saveCurrentStep()" title="Lưu lại góc hiện tại của 6 khớp">
+            💾 LƯU BƯỚC (SAVE)
+          </button>
+          <button class="btn-action btn-run" id="btnRun" onclick="toggleRun()" title="Chạy lặp lại các bước đã lưu">
+            ▶ CHẠY (RUN)
+          </button>
+          <button class="btn-action btn-reset-steps" onclick="clearAllSteps()" title="Xóa toàn bộ các bước đã lưu">
+            🗑 XÓA BƯỚC
+          </button>
+          <button class="btn-action btn-home" onclick="resetAllHome()" title="Đưa tất cả khớp về góc 90°">
+            🔄 VỀ GIỮA (90°)
+          </button>
+        </div>
+
+        <!-- CHẾ ĐỘ CHẠY: LẦN LƯỢT / ĐỒNG THỜI -->
+        <div class="step-mode-box">
+          <span>Kiểu chạy:</span>
+          <div class="step-mode-toggle">
+            <button class="btn-step-mode active" id="btn-mode-seq" onclick="setRunMode('seq')" title="Chạy từng con một (Rất êm, không sụt áp)">➡️ Lần lượt</button>
+            <button class="btn-step-mode" id="btn-mode-sim" onclick="setRunMode('sim')" title="Chạy cả 6 con cùng một lúc">⚡ Cùng lúc</button>
+          </div>
+        </div>
+
+        <!-- NGHỈ GIỮA CÁC BƯỚC (DELAY) -->
+        <div class="delay-box">
+          <span>Thời gian nghỉ mỗi bước:</span>
+          <div>
+            <input type="number" class="delay-input" id="stepDelay" value="800" min="100" max="5000" step="100">
+            <span>ms</span>
+          </div>
+        </div>
+
+        <!-- DANH SÁCH BƯỚC ĐÃ LƯU -->
+        <div class="panel-heading" style="margin-top: 2px;">
+          <span>Danh sách bước</span>
+        </div>
+        <div class="steps-container" id="stepsList">
+          <div class="empty-steps">Chưa có bước nào.<br>Chỉnh thanh trượt rồi bấm <b>"LƯU BƯỚC"</b>.</div>
+        </div>
+      </div>
+
+      <!-- CỘT PHẢI: CÁC THANH TRƯỢT CON NHỘNG (CÂN ĐỐI, CÓ KHUNG ĐẸP) -->
+      <div class="right-panel" id="slidersList">
+        <!-- 6 Khớp Servo + 1 Thanh Tốc Độ -->
+      </div>
+
+    </div>
+
+    <!-- THANH CUỐI CÙNG -->
+    <div class="bottom-bar">
+      <span class="status-text" id="logPreview">Sẵn sàng điều khiển.</span>
+      <button class="btn-stop-all" onclick="emergencyStop()">🛑 DỪNG KHẨN CẤP</button>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== CHUYỂN ĐỔI MÀU NỀN THEME =====
+    function changeTheme(themeName) {
+      document.documentElement.setAttribute('data-theme', themeName);
+      localStorage.setItem('robot_theme', themeName);
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('robot_theme') || 'blue';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const themeSelect = document.getElementById('themeSelect');
+      if (themeSelect) themeSelect.value = savedTheme;
+    }
+
+    // Định nghĩa 6 khớp robot (Đã cân chỉnh giới hạn góc an toàn cho Khớp Vai và Tay Kẹp)
+    const KHOP_ROBOT = [
+      { id: 1, ten: "Đế Xoay (K5)", min: 0, max: 180, defaultVal: 90 },
+      { id: 2, ten: "Khớp Vai (K4)", min: 0, max: 140, defaultVal: 90 }, // Giới hạn tối đa 140° để không chạm điểm kẹt cơ học / rung giật ở 145°-147°
+      { id: 3, ten: "Khớp Khuỷu (K3)", min: 0, max: 180, defaultVal: 90 },
+      { id: 4, ten: "Cổ Tay Xoay (K2)", min: 0, max: 180, defaultVal: 90 },
+      { id: 5, ten: "Cổ Tay Gập (K1)", min: 0, max: 180, defaultVal: 90 },
+      { id: 6, ten: "Tay Kẹp (K0)", min: 0, max: 123, defaultVal: 60 }
+    ];
+
+    let currentSpeedMode = localStorage.getItem("robot_speed_mode") || "TB";
+
+    let savedSteps = [];
+    let isRunning = false;
+    let runStepIndex = 0;
+    let runTimer = null;
+
+    let port = null;
+    let writer = null;
+    let reader = null;
+    let isConnected = false;
+
+    // Tạo thanh trượt ngắn gọn đúng style hình ảnh
+    function renderSliders() {
+      const container = document.getElementById("slidersList");
+      let html = "";
+
+      // 6 Khớp Servo
+      KHOP_ROBOT.forEach(k => {
+        const saved = localStorage.getItem("servo_" + k.id);
+        const val = saved !== null ? parseInt(saved) : k.defaultVal;
+        const pad = String(val).padStart(3, "0");
+
+        html += `
+          <div class="slider-row">
+            <div class="slider-connector">
+              <span class="joint-name" onclick="resetSingle(${k.id})" title="Nhấn để về 90°">${k.ten}</span>
+              <div class="connector-line"></div>
+            </div>
+            <div class="slider-track-box">
+              <input type="range" min="${k.min}" max="${k.max}" value="${val}" id="slider-${k.id}" 
+                oninput="onServoChange(${k.id}, this.value)"
+                onchange="onServoRelease(${k.id}, this.value)">
+            </div>
+            <span class="val-pill" id="val-${k.id}">${pad}</span>
+            <button class="btn-90" onclick="resetSingle(${k.id})" title="Về vị trí cân bằng">${k.id === 6 ? '60°' : '90°'}</button>
+          </div>
+        `;
+      });
+
+      // 3 Mức Tốc Độ (Chậm - Vừa - Nhanh)
+      html += `
+        <div class="slider-row speed-row">
+          <div class="slider-connector">
+            <span class="speedo-icon" title="Chọn mức tốc độ">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 4a8 8 0 0 0-8 8c0 2.21.89 4.21 2.34 5.66l1.41-1.42A5.98 5.98 0 0 1 6 12a6 6 0 1 1 11.23 2.94l1.42 1.42A7.96 7.96 0 0 0 20 12a8 8 0 0 0-8-8zm-1 4v5.58l-2.79 2.8 1.42 1.41L12 15.41V8h-1z"/>
+              </svg>
+            </span>
+            <div class="connector-line"></div>
+          </div>
+          <div class="speed-btn-group">
+            <button class="btn-speed-mode ${currentSpeedMode === 'CHAM' ? 'active' : ''}" id="btn-spd-CHAM" onclick="setSpeedMode('CHAM')" title="20ms/độ (~50°/s) - Rất êm ái, chống rung lắc, triệt tiêu sụt áp">🐢 CHẬM</button>
+            <button class="btn-speed-mode ${currentSpeedMode === 'TB' ? 'active' : ''}" id="btn-spd-TB" onclick="setSpeedMode('TB')" title="8ms/độ (~125°/s) - Nhanh vừa phải, lướt mượt, đầm tay">🚗 VỪA</button>
+            <button class="btn-speed-mode ${currentSpeedMode === 'NHANH' ? 'active' : ''}" id="btn-spd-NHANH" onclick="setSpeedMode('NHANH')" title="0ms tức thì - Bám sát theo tay kéo">⚡ NHANH</button>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // Bộ đệm góc & tốc độ thời gian thực (hàng đợi tuần tự an toàn tuyệt đối)
+    const targetAngles = {};
+    const lastSentAngles = {};
+    let targetSpeed = null;
+    let lastSentSpeed = null;
+    let isSerialWriting = false;
+    const textEncoder = new TextEncoder();
+    const textDecoder = new TextDecoder();
+
+    // Khi kéo góc servo (chạy liên tục, kéo tới đâu gửi ngay tới đó)
+    function onServoChange(id, val) {
+      const num = parseInt(val);
+      const pad = String(num).padStart(3, "0");
+      document.getElementById("val-" + id).textContent = pad;
+      targetAngles[id] = num;
+      dispatchSerial();
+    }
+
+    // Khi thả chuột mới lưu cấu hình để không bị khựng UI
+    function onServoRelease(id, val) {
+      localStorage.setItem("servo_" + id, val);
+    }
+
+    // Bộ điều phối gửi Serial hàng đợi duy nhất (chống xung đột race-condition)
+    async function dispatchSerial() {
+      if (!isConnected || !writer || isSerialWriting) return;
+
+      // 1. Ưu tiên gửi lệnh Tốc Độ nếu có thay đổi
+      if (targetSpeed !== null && targetSpeed !== lastSentSpeed) {
+        const spd = targetSpeed;
+        const cmdStr = `SPD:${spd}\n`;
+        isSerialWriting = true;
+        try {
+          await writer.write(textEncoder.encode(cmdStr));
+          lastSentSpeed = spd;
+          document.getElementById("logPreview").textContent = `Đang gửi tốc độ: ${spd}%`;
+        } catch (e) {
+          console.warn("Lỗi gửi tốc độ:", e);
+        } finally {
+          isSerialWriting = false;
+        }
+        setTimeout(dispatchSerial, 15);
+        return;
+      }
+
+      // 2. Gửi các góc servo đang chờ gửi
+      for (let id = 1; id <= 6; id++) {
+        if (targetAngles[id] !== undefined && targetAngles[id] !== lastSentAngles[id]) {
+          const angle = targetAngles[id];
+          const pad = String(angle).padStart(3, "0");
+          const cmdStr = `S${id}:${pad}\n`;
+          isSerialWriting = true;
+          try {
+            await writer.write(textEncoder.encode(cmdStr));
+            lastSentAngles[id] = angle;
+            document.getElementById("logPreview").textContent = `Đang gửi: S${id}:${pad}`;
+          } catch (e) {
+            console.warn("Lỗi gửi góc:", e);
+          } finally {
+            isSerialWriting = false;
+          }
+
+          // Kiểm tra xem còn kênh nào hoặc tốc độ nào cần gửi tiếp không
+          setTimeout(dispatchSerial, 15);
+          return;
+        }
+      }
+    }
+
+    // Đưa 1 servo về vị trí cân bằng
+    function resetSingle(id) {
+      const k = KHOP_ROBOT.find(x => x.id === id);
+      const defaultGoc = k ? k.defaultVal : 90;
+      const slider = document.getElementById("slider-" + id);
+      slider.value = defaultGoc;
+      onServoChange(id, defaultGoc);
+      onServoRelease(id, defaultGoc);
+    }
+
+    // Chọn 1 trong 3 mức tốc độ (Chậm - Vừa - Nhanh)
+    function setSpeedMode(mode) {
+      currentSpeedMode = mode;
+      localStorage.setItem("robot_speed_mode", mode);
+
+      ['CHAM', 'TB', 'NHANH'].forEach(m => {
+        const btn = document.getElementById("btn-spd-" + m);
+        if (btn) {
+          if (m === mode) btn.classList.add("active");
+          else btn.classList.remove("active");
+        }
+      });
+
+      targetSpeed = mode;
+      dispatchSerial();
+
+      const ten = mode === 'CHAM' ? '🐢 Chậm (Siêu êm)' : mode === 'TB' ? '🚗 Vừa (Mượt mà)' : '⚡ Nhanh (Tức thì)';
+      showToast(`Đã chọn: ${ten}`);
+      document.getElementById("logPreview").textContent = `Đang chọn tốc độ: ${ten}`;
+    }
+
+    // Đưa tất cả về 90 độ
+    function resetAllHome() {
+      KHOP_ROBOT.forEach(k => {
+        resetSingle(k.id);
+      });
+      showToast("Tất cả đã về 90°");
+    }
+
+    // ===== CHỨC NĂNG LẬP TRÌNH BƯỚC (SAVE / RUN / RESET) =====
+    function saveCurrentStep() {
+      const current = {};
+      KHOP_ROBOT.forEach(k => {
+        current[k.id] = parseInt(document.getElementById("slider-" + k.id).value);
+      });
+
+      savedSteps.push(current);
+      renderStepsList();
+      showToast(`Đã lưu Bước ${savedSteps.length}!`);
+    }
+
+    function renderStepsList() {
+      const container = document.getElementById("stepsList");
+      const countText = document.getElementById("stepCountText");
+      countText.textContent = `${savedSteps.length} bước`;
+
+      if (savedSteps.length === 0) {
+        container.innerHTML = `<div class="empty-steps">Chưa có bước nào.<br>Chỉnh thanh trượt rồi bấm <b>"LƯU BƯỚC"</b>.</div>`;
+        return;
+      }
+
+      let html = "";
+      savedSteps.forEach((step, idx) => {
+        const angles = KHOP_ROBOT.map(k => step[k.id]).join(",");
+        const isActive = isRunning && (runStepIndex === idx);
+        html += `
+          <div class="step-item ${isActive ? 'active' : ''}" onclick="applyStep(${idx})">
+            <span class="step-badge">Bước ${idx + 1}</span>
+            <span class="step-angles">[${angles}]</span>
+            <span class="step-del" onclick="event.stopPropagation(); deleteStep(${idx})" title="Xóa">✕</span>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // Chế độ chạy: 'seq' (lần lượt từng con) hoặc 'sim' (đồng thời cả 6 con)
+    let runMode = localStorage.getItem('robot_run_mode') || 'seq';
+
+    function setRunMode(mode) {
+      runMode = mode;
+      localStorage.setItem('robot_run_mode', mode);
+      const btnSeq = document.getElementById('btn-mode-seq');
+      const btnSim = document.getElementById('btn-mode-sim');
+      if (btnSeq && btnSim) {
+        btnSeq.classList.toggle('active', mode === 'seq');
+        btnSim.classList.toggle('active', mode === 'sim');
+      }
+      const text = mode === 'seq' ? '➡️ Đã chọn: Chạy Lần Lượt từng con' : '⚡ Đã chọn: Chạy Cùng Lúc cả 6 con';
+      showToast(text);
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Tính thời gian cần thiết để servo quay xong góc theo mức tốc độ hiện tại
+    function getServoTransitTime(diffAngles) {
+      if (diffAngles <= 0) return 0;
+      let msPerDegree = 8; // Mặc định VỪA: 8ms/độ
+      if (currentSpeedMode === 'CHAM') msPerDegree = 20; // CHẬM: 20ms/độ
+      else if (currentSpeedMode === 'TB') msPerDegree = 8;   // VỪA: 8ms/độ
+      else if (currentSpeedMode === 'NHANH') msPerDegree = 3;// NHANH: ~3ms/độ
+
+      return Math.round(diffAngles * msPerDegree) + 80; // Cộng thêm 80ms bù trễ cơ khí
+    }
+
+    function applyStep(idx) {
+      if (idx < 0 || idx >= savedSteps.length) return;
+      const step = savedSteps[idx];
+      KHOP_ROBOT.forEach(k => {
+        const val = step[k.id];
+        const slider = document.getElementById("slider-" + k.id);
+        slider.value = val;
+        onServoChange(k.id, val);
+      });
+    }
+
+    function deleteStep(idx) {
+      savedSteps.splice(idx, 1);
+      renderStepsList();
+    }
+
+    function clearAllSteps() {
+      if (isRunning) stopRun();
+      savedSteps = [];
+      renderStepsList();
+      showToast("Đã xóa hết các bước");
+    }
+
+    // Chạy tự động chu kỳ các bước
+    function toggleRun() {
+      if (isRunning) {
+        stopRun();
+      } else {
+        startRun();
+      }
+    }
+
+    function startRun() {
+      if (savedSteps.length === 0) {
+        showToast("Hãy lưu ít nhất 1 bước trước khi chạy!");
+        return;
+      }
+
+      isRunning = true;
+      runStepIndex = 0;
+      const btn = document.getElementById("btnRun");
+      btn.textContent = "⏸ TẠM DỪNG";
+      btn.classList.add("running");
+      const modeText = runMode === 'seq' ? 'Lần lượt từng con' : 'Cùng lúc 6 con';
+      showToast(`Đang chạy tự động (${modeText})...`);
+      runLoop();
+    }
+
+    function stopRun() {
+      isRunning = false;
+      clearTimeout(runTimer);
+      const btn = document.getElementById("btnRun");
+      btn.textContent = "▶ CHẠY (RUN)";
+      btn.classList.remove("running");
+      renderStepsList();
+      showToast("Đã dừng chạy tự động");
+    }
+
+    async function runLoop() {
+      if (!isRunning) return;
+
+      renderStepsList();
+      const step = savedSteps[runStepIndex];
+
+      if (runMode === 'seq') {
+        // ===== CHẾ ĐỘ 1: CHẠY LẦN LƯỢT TỪNG SERVO =====
+        for (let i = 0; i < KHOP_ROBOT.length; i++) {
+          if (!isRunning) return;
+          const k = KHOP_ROBOT[i];
+          const targetVal = step[k.id];
+          const currentVal = parseInt(document.getElementById("slider-" + k.id).value);
+          const diff = Math.abs(targetVal - currentVal);
+
+          // Nếu góc có thay đổi thì mới cho quay
+          if (diff > 0) {
+            document.getElementById("slider-" + k.id).value = targetVal;
+            onServoChange(k.id, targetVal);
+            onServoRelease(k.id, targetVal);
+
+            // Chờ đúng thời gian con servo này quay xong mới đến con tiếp theo
+            const waitTime = getServoTransitTime(diff);
+            await sleep(waitTime);
+          }
+        }
+      } else {
+        // ===== CHẾ ĐỘ 2: CHẠY ĐỒNG THỜI CẢ 6 SERVO CÙNG LÚC =====
+        applyStep(runStepIndex);
+      }
+
+      if (!isRunning) return;
+
+      // Thời gian nghỉ giữa các bước
+      const delay = parseInt(document.getElementById("stepDelay").value) || 800;
+      runStepIndex = (runStepIndex + 1) % savedSteps.length;
+
+      runTimer = setTimeout(runLoop, delay);
+    }
+
+    function emergencyStop() {
+      if (isRunning) stopRun();
+      KHOP_ROBOT.forEach(k => {
+        const val = parseInt(document.getElementById("slider-" + k.id).value);
+        targetAngles[k.id] = val;
+      });
+      targetSpeed = 100;
+      dispatchSerial();
+      showToast("🛑 ĐÃ DỪNG KHẨN CẤP!");
+    }
+
+    // ===== KẾT NỐI SERIAL ARDUINO =====
+    async function toggleConnect() {
+      if (isConnected) {
+        await disconnectSerial();
+        return;
+      }
+
+      if (!("serial" in navigator)) {
+        alert("Vui lòng mở web trên Google Chrome hoặc Microsoft Edge để kết nối Arduino!");
+        return;
+      }
+
+      try {
+        port = await navigator.serial.requestPort();
+        const baud = parseInt(document.getElementById("baudRate").value);
+        await port.open({ baudRate: baud });
+
+        writer = port.writable.getWriter();
+        reader = port.readable.getReader();
+
+        isConnected = true;
+        updateUIConnect(true);
+        showToast("Đã kết nối Arduino!");
+
+        // Chờ 1.5 giây cho Arduino nạp bootloader xong rồi đồng bộ mức tốc độ qua hàng đợi
+        setTimeout(() => {
+          targetSpeed = currentSpeedMode;
+          lastSentSpeed = null;
+          dispatchSerial();
+        }, 1500);
+
+        readSerial();
+      } catch (err) {
+        console.error(err);
+        if (err.name !== "NotFoundError") {
+          let msg = err.message;
+          if (msg.includes("Failed to open") || msg.includes("Access denied")) {
+            msg = "Cổng COM đang bị chiếm! Hãy tắt Serial Monitor trong Arduino IDE rồi thử lại.";
+          }
+          alert("Lỗi kết nối: " + msg);
+          showToast("Lỗi kết nối: " + msg);
+        }
+      }
+    }
+
+    async function disconnectSerial() {
+      try {
+        isConnected = false;
+        if (writer) { await writer.close(); writer = null; }
+        if (reader) { await reader.cancel(); reader = null; }
+        if (port) { await port.close(); port = null; }
+      } catch (e) {}
+      updateUIConnect(false);
+      showToast("Đã rút cáp USB");
+    }
+
+    async function readSerial() {
+      try {
+        while (isConnected && reader) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          if (value) {
+            const str = textDecoder.decode(value).trim();
+            if (str) {
+              if (str.includes("OK_SPD:")) {
+                const spd = str.split("OK_SPD:")[1].trim();
+                const ten = spd === 'CHAM' ? '🐢 Chậm (50°/s)' : spd === 'TB' ? '🚗 Vừa (125°/s)' : spd === 'NHANH' ? '⚡ Nhanh (Tức thì)' : spd;
+                document.getElementById("logPreview").textContent = `⚡ Arduino xác nhận: ${ten}`;
+                showToast(`⚡ Tốc độ Arduino: ${ten}`);
+              } else if (str.includes("PCA9685_OK")) {
+                document.getElementById("logPreview").textContent = "Mạch PCA9685 sẵn sàng ✓";
+                // Lập tức đồng bộ tốc độ hiện tại
+                targetSpeed = currentSpeedMode;
+                lastSentSpeed = null;
+                dispatchSerial();
+              } else {
+                document.getElementById("logPreview").textContent = "Arduino: " + str;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        if (isConnected) disconnectSerial();
+      }
+    }
+
+    async function sendCmdDirect(cmd) {
+      if (!isConnected || !writer || isSerialWriting) return;
+      isSerialWriting = true;
+      try {
+        await writer.write(textEncoder.encode(cmd + "\n"));
+        document.getElementById("logPreview").textContent = "Gửi: " + cmd;
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        isSerialWriting = false;
+      }
+    }
+
+    async function sendCmd(cmd) {
+      return sendCmdDirect(cmd);
+    }
+
+    function updateUIConnect(state) {
+      const badge = document.getElementById("statusBadge");
+      const text = document.getElementById("statusText");
+      const btn = document.getElementById("btnConnect");
+      const baud = document.getElementById("baudRate");
+
+      if (state) {
+        badge.classList.add("connected");
+        text.textContent = "Đã cắm USB ✓";
+        btn.classList.add("connected");
+        btn.innerHTML = "<span>✕ Ngắt Cáp</span>";
+        baud.disabled = true;
+      } else {
+        badge.classList.remove("connected");
+        text.textContent = "Chưa cắm USB";
+        btn.classList.remove("connected");
+        btn.innerHTML = "<span>🔌 Cắm Cáp</span>";
+        baud.disabled = false;
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove("show"), 2000);
+    }
+
+    // Kiểm tra giao thức file://
+    if (location.protocol === 'file:') {
+      const fw = document.getElementById('fileWarning');
+      if (fw) fw.style.display = 'block';
+    }
+
+    // Lắng nghe sự kiện cắm/rút USB trên trình duyệt
+    if ('serial' in navigator) {
+      navigator.serial.addEventListener('connect', () => {
+        showToast("⚡ Đã phát hiện cáp USB cắm vào! Bấm 'Cắm Cáp' để kết nối.");
+        const lp = document.getElementById("logPreview");
+        if (lp) lp.textContent = "Phát hiện USB vừa cắm. Hãy bấm 'Cắm Cáp' để chọn cổng COM.";
+      });
+
+      navigator.serial.addEventListener('disconnect', () => {
+        if (isConnected) disconnectSerial();
+        showToast("Đã rút cáp USB!");
+      });
+    }
+
+    // Khởi tạo
+    initTheme();
+    renderSliders();
+    renderStepsList();
+    setRunMode(runMode);
+  </script>
+</body>
+</html>
